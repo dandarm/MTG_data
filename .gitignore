@@ -1,0 +1,10 @@
+.cache_mtg/
+.vscode/
+__pycache__/
+debug_plots/
+fix_vscode_kernel_binding.py
+mtg_20260603_q4/
+video_outputs/
+*.pyc
+*.pyo
+*.pyd
