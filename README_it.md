@@ -1,8 +1,11 @@
-# MTG Download
+# Download EUMETSAT
 
-Questo workspace contiene uno script minimale per scaricare prodotti `MTG FCI` dal `EUMETSAT Data Store` usando `EUMDAC`.
+Questo workspace contiene due script minimali per scaricare prodotti dal `EUMETSAT Data Store` usando `EUMDAC`.
 
-Script principale: [download_mtg_fci.py](C:/Users/Daniele.LOKI/Documents/medicanes/MTG_data/download_mtg_fci.py)
+Script principali:
+
+- [download_mtg_fci.py](C:/Users/Daniele.LOKI/Documents/medicanes/MTG_data/download_mtg_fci.py): scarica prodotti `MTG FCI`
+- [download_msg_seviri.py](C:/Users/Daniele.LOKI/Documents/medicanes/MTG_data/download_msg_seviri.py): scarica archivi ZIP `MSG SEVIRI`
 
 ## Requisiti
 
@@ -10,11 +13,12 @@ Script principale: [download_mtg_fci.py](C:/Users/Daniele.LOKI/Documents/medican
 - account EUMETSAT con accesso al Data Store
 - `consumer key` e `consumer secret` EUMETSAT
 - pacchetto Python `eumdac`
+- pacchetto Python `requests` per il downloader MSG
 
 Installazione:
 
 ```powershell
-pip install eumdac
+pip install eumdac requests
 ```
 
 ## Credenziali
@@ -31,15 +35,21 @@ $env:EUMETSAT_CONSUMER_KEY="la_tua_consumer_key"
 $env:EUMETSAT_CONSUMER_SECRET="il_tuo_consumer_secret"
 ```
 
-In alternativa:
+In alternativa per MTG:
 
 ```powershell
 python .\download_mtg_fci.py --consumer-key "KEY" --consumer-secret "SECRET" ...
 ```
 
+Oppure per MSG SEVIRI:
+
+```powershell
+python .\download_msg_seviri.py --consumer-key "KEY" --consumer-secret "SECRET" ...
+```
+
 Nota: in genere non serve una chiave diversa da quella usata per MSG, se e' gia' una chiave del `EUMETSAT Data Store`. Serve pero' che la licenza del dataset MTG sia attiva sul portale EUMETSAT.
 
-## Uso Base
+## Uso MTG FCI
 
 Lo script cerca i prodotti nell'intervallo temporale richiesto e poi:
 
@@ -122,6 +132,67 @@ python .\download_mtg_fci.py `
   --out .\mtg_hr_q4
 ```
 
+## Uso MSG SEVIRI
+
+Lo script MSG scarica gli ZIP completi restituiti dal Data Store. Non estrae i file e non costruisce compositi RGB.
+
+Help:
+
+```powershell
+python .\download_msg_seviri.py --help
+```
+
+Parametri principali:
+
+- `--start`: inizio intervallo in UTC, formato `YYYY-MM-DDTHH:MM:SS`
+- `--end`: fine intervallo in UTC, formato `YYYY-MM-DDTHH:MM:SS`
+- `--collection`: collection EUMETSAT da usare
+- `--out`: directory di output dove salvare gli ZIP
+- `--download-workers`: numero di download concorrenti
+- `--retries`: numero massimo di retry per prodotto
+- `--read-timeout`: timeout di lettura HTTP in secondi
+- `--list-only`: elenca i prodotti trovati senza scaricare nulla
+
+Collection di default:
+
+```text
+EO:EUM:DAT:MSG:MSG15-RSS
+```
+
+Questa corrisponde a `MSG-15 Rapid Scan SEVIRI`.
+
+Esempi:
+
+### 1. Elencare i prodotti MSG senza scaricare
+
+```powershell
+python .\download_msg_seviri.py `
+  --start 2026-03-15T00:00:00 `
+  --end 2026-03-15T01:00:00 `
+  --list-only
+```
+
+### 2. Scaricare i prodotti ZIP MSG
+
+```powershell
+python .\download_msg_seviri.py `
+  --start 2026-03-15T00:00:00 `
+  --end 2026-03-17T23:55:00 `
+  --out .\msg_20260315_20260317
+```
+
+### 3. Regolare concorrenza e retry
+
+```powershell
+python .\download_msg_seviri.py `
+  --start 2026-03-15T00:00:00 `
+  --end 2026-03-15T06:00:00 `
+  --download-workers 4 `
+  --retries 3 `
+  --read-timeout 180 `
+  --out .\msg_retry_test
+```
+
 ## Nota Sugli Orari
 
 Lo script lavora in `UTC`.
@@ -140,7 +211,7 @@ Quindi per l'intervallo del `3 giugno 2026` dalle `07:00` alle `08:30` ora itali
 
 ## Struttura Output
 
-Per ogni prodotto trovato, lo script crea una sottocartella dentro `--out`.
+Per ogni prodotto MTG trovato, lo script crea una sottocartella dentro `--out`.
 
 Esempio:
 
@@ -153,6 +224,8 @@ mtg_20260603_q4/
 ```
 
 Se scarichi il prodotto completo, dentro la cartella del prodotto troverai l'archivio completo restituito dal Data Store.
+
+Per lo script MSG, gli ZIP vengono scritti direttamente dentro `--out` insieme a un file `download_manifest.csv`.
 
 ## Errori Comuni
 
@@ -182,14 +255,14 @@ Cause frequenti:
 
 - orario inserito nel fuso sbagliato
 - collection non corretta
-- licenza del dataset MTG non abilitata
+- licenza del dataset non abilitata per la collection richiesta
 
 ## Estensioni Possibili
 
-Questo script e' volutamente minimale. Le estensioni piu' naturali sono:
+Questi script sono volutamente minimali. Le estensioni piu' naturali sono:
 
-- integrazione con lo script MSG gia' esistente
+- integrazione di MTG e MSG in una singola CLI
 - download batch su piu' intervalli temporali
 - retry automatici
 - logging su file
-- scelta guidata delle collection MTG
+- scelta guidata delle collection

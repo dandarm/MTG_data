@@ -1,5 +1,6 @@
 .cache_mtg/
 .vscode/
+.venv
 __pycache__/
 debug_plots/
 fix_vscode_kernel_binding.py
@@ -8,3 +9,6 @@ video_outputs/
 *.pyc
 *.pyo
 *.pyd
+
+test_download/
+test_downloads/
